@@ -78,4 +78,45 @@ contract OurTokenTest is Test {
         vm.expectRevert();
         ourToken.transfer(address(0), STARTING_BALANCE);
     }
+
+    function testDecimals() public {
+        uint8 decimals = ourToken.decimals();
+        assertEq(decimals, 18, "Decimals should be set to 18");
+    }
+
+    function testSymbol() public {
+        string memory symbol = ourToken.symbol();
+        assertEq(symbol, "OT", "Symbol should be OT");
+    }
+
+    function testName() public {
+        string memory name = ourToken.name();
+        assertEq(name, "OurToken", "Name should be OurToken");
+    }
+
+    function testTransferWithInsufficientAllowance() public {
+        uint256 transferAmount = 500;
+        // Alice has no allowance from Bob
+        vm.prank(alice);
+        vm.expectRevert();
+        ourToken.transferFrom(bob, alice, transferAmount);
+    }
+
+    function testApproveAndTransferFromZeroAmount() public {
+        uint256 initialAllowance = 1000;
+        // Bob approves Alice to spend tokens on her behalf
+        vm.prank(bob);
+        ourToken.approve(alice, initialAllowance);
+
+        // Alice transfers zero amount from Bob's account
+        vm.prank(alice);
+        ourToken.transferFrom(bob, alice, 0);
+
+        // Ensure balances remain unchanged
+        assertEq(ourToken.balanceOf(alice), 0);
+        assertEq(ourToken.balanceOf(bob), STARTING_BALANCE);
+
+        // Ensure allowance is correctly updated
+        assertEq(ourToken.allowance(bob, alice), initialAllowance);
+    }
 }
